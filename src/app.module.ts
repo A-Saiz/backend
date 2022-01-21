@@ -7,14 +7,16 @@ import { AuthModule } from './auth/auth/auth.module';
 import { ImageModule } from './image/image.module';
 import { UserModule } from './user/user.module';
 import Joi from 'joi';
+import { APP_FILTER } from '@nestjs/core';
+import { ExceptionsLoggerFilter } from './utils/exceptionsLogger.filter';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
-      validationSchema: Joi.object({
-        JWT_SECRET: Joi.string().required(),
-        JWT_EXPIRATION_TIME: Joi.string().required()
-      })
+    //  validationSchema: Joi.object().keys({
+    //    JWT_SECRET: Joi.string().required(),
+     //   JWT_EXPIRATION_TIME: Joi.string().required()
+      //})
     }),
     MulterModule.register({
       dest: './files'
@@ -24,6 +26,12 @@ import Joi from 'joi';
     AuthModule
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_FILTER,
+      useClass: ExceptionsLoggerFilter,
+    }
+  ],
 })
 export class AppModule {}

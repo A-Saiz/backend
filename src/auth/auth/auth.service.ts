@@ -21,14 +21,15 @@ export class AuthService {
      * @returns New registered user
      */
     public async register(registerDto: RegisterDto) {
-        const hashPassword = await bcrypt.hash(registerDto.password, 10);
+        const saltOrRounds = bcrypt.genSaltSync(10);
+        const hashPassword = bcrypt.hashSync(registerDto.password, saltOrRounds);
         try {
             const createdUser = await this.userService.create({
                 ...registerDto,
                 password: hashPassword
             });
             //TODO: Clean up later
-            createdUser.password = undefined;
+            //createdUser.password = undefined;
             return createdUser;
         } catch (error) {
             //TODO: Catch more specific error handling
@@ -44,11 +45,11 @@ export class AuthService {
      * @param password Password to compare
      * @returns User
      */
-    public async getAuthenticatedUser(username: string, password: string) {
+    public async getAuthenticatedUser(email: string, password: string) {
         try {
-            const user = await this.userService.getByEmail(username);
+            const user = await this.userService.getByEmail(email);
             await this.verifyPassword(password, user.password);
-            user.password = undefined;
+            //user.password = undefined;
             return user;
         } catch (error) {
             throw new HttpException('Incorrect credentials', HttpStatus.BAD_REQUEST);

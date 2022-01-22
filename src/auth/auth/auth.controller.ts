@@ -1,20 +1,20 @@
-import { Body, Controller, Get, HttpCode, Post, Req, Res, SerializeOptions, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, HttpCode, Post, Req, UseGuards } from "@nestjs/common";
 import { Response } from "express";
 import { LocalAuthGaurd } from "src/guards/auth.gaurds";
 import JwtAuthGaurd from "src/guards/jwtAuth.gaurd";
 import RequestWithUser from "src/interfaces/requestWithUser.interface";
+import { SETTINGS } from "src/utils/app.utils";
 import { RegisterDto } from "../registerDto";
 import { AuthService } from "./auth.service";
 
 @Controller('auth')
-@SerializeOptions({strategy: "excludeAll"})
 export class AuthController {
     constructor(
         private readonly authService: AuthService
     ) {}
 
     @Post('register')
-    async register(@Body() registerDto: RegisterDto) {
+    async register(@Body(SETTINGS.VALIDATION_PIPE) registerDto: RegisterDto) {
         return this.authService.register(registerDto);
     }
 

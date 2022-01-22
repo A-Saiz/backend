@@ -7,16 +7,15 @@ export class User {
     userID: number;
 
     @Column({unique: true})
-    @Expose()
+    //@Expose()
     email: string;
 
     @Column()
-    @Expose()
+    //@Expose()
     username: string;
 
-    //TODO: Use bcrypt to hash password
     @Column()
-    @Exclude()
+    //@Exclude()
     password: string;
 }
 

@@ -13,6 +13,7 @@ import { ExceptionsLoggerFilter } from './utils/exceptionsLogger.filter';
 @Module({
   imports: [
     ConfigModule.forRoot({
+      isGlobal: true
     //  validationSchema: Joi.object().keys({
     //    JWT_SECRET: Joi.string().required(),
      //   JWT_EXPIRATION_TIME: Joi.string().required()

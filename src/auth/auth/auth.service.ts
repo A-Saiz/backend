@@ -72,8 +72,12 @@ export class AuthService {
      * Deletes cookies when logging user out
      * @returns nothing :)
      */
-    public getCookieForLogout() {
-        return `Authentication=; HttpOnly; Path=/; Max-Age=0;`;
+    public getCookiesForLogout() {
+        return [
+            'Authentication=; HttpOnly; Path=/; Max-Age=0',
+            'Refresh=; HttpOnly; Path=/; Max-Age=0'
+          ];
+
     }
 
     /**
@@ -81,9 +85,21 @@ export class AuthService {
      * @param userId User that logs in
      * @returns Jwt token to check for authentication
      */
-    public getCookieWithJwtToken(userId: number) {
+     public getCookieWithJwtToken(userId: number) {
         const payload: TokenPayload = {userId};
-        const token = this.jwtService.sign(payload);
+        const token = this.jwtService.signAsync(payload, {
+            secret: this.configService.get('JWT_SECRET'),
+            expiresIn: `${this.configService.get('JWT_EXPIRATION_TIME')}s`
+        });
         return `Authentication=${token}; HttpOnly; Path=/; Max-Age=${this.configService.get('JWT_EXPIRATION_TIME')}`;
+    }
+
+    public getCookieWithRefreshToken(userId: number) {
+        const payload: TokenPayload = {userId};
+        const token = this.jwtService.sign(payload, {
+            secret: this.configService.get('JWT_REFRESH_SECRET'),
+            expiresIn: `${this.configService.get('JWT_EXPIRATION_TIME')}s`
+          });
+          return `Refresh=${token}; HttpOnly; Path=/; Max-Age=${this.configService.get('JWT_REFRESH_EXPIRATION_TIME')}`;
     }
 }

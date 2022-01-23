@@ -2,7 +2,8 @@ import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from "../user/entities/user.entity";
-import { Repository, getConnection } from "typeorm";
+import { Repository } from "typeorm";
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserService {
@@ -41,6 +42,25 @@ export class UserService {
    async findOne(id: number): Promise<User | undefined> {
     const user = await this.userRepo.findOne(id);
     return user;
+  }
+
+  async setCurrentRefreshToken(refreshToken: string, userId: number) {
+    const currentRefreshToken = bcrypt.hashSync(refreshToken, 10);
+    await this.userRepo.update(userId, {currentRefreshToken});
+  }
+
+  async getUserIfRefreshTokenMatches(refreshToken: string, userId: number) {
+    const user = await this.getById(userId);
+    const isRefreshTokenMatching = bcrypt.compareSync(refreshToken, user.currentRefreshToken);
+
+    if(isRefreshTokenMatching) {
+      return user;
+    }
+    throw new HttpException('There was a problem logging in', HttpStatus.NOT_ACCEPTABLE);
+  }
+
+  async removeRefreshToken(userId: number) {
+    return this.userRepo.update(userId, {currentRefreshToken: null});
   }
 
   update(id: number, updateUserDto: UpdateUserDto): string {

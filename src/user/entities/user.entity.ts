@@ -7,15 +7,19 @@ export class User {
     userID: number;
 
     @Column({unique: true})
-    //@Expose()
+    @Expose()
     email: string;
 
+    @Column({nullable: true})
+    @Exclude()
+    currentRefreshToken?: string;
+
     @Column()
-    //@Expose()
+    @Expose()
     username: string;
 
     @Column()
-    //@Exclude()
+    @Exclude()
     password: string;
 }
 

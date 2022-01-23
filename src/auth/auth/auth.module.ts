@@ -24,7 +24,10 @@ import { AuthService } from './auth.service';
         signOptions: {expiresIn: `${configService.get('JWT_EXPIRATION_TIME')}s`},
       })
     }),
-    ConfigModule
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '.env'
+    })
   ],
   providers: [
     ...userProvider,

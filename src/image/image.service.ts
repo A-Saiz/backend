@@ -1,36 +1,50 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateImageDto } from './dto/create-image.dto';
 import { UpdateImageDto } from './dto/update-image.dto';
 
-import { Repository } from "typeorm";
 import { Image } from "../image/entities/image.entity";
+import { MysqlDataSource } from 'src/providers/database.provider';
+
+const ImageRepository = MysqlDataSource.getRepository(Image);
 
 @Injectable()
 export class ImageService {
-  constructor(
-    @Inject('IMAGE_REPO')
-    private imageRepo: Repository<Image>
-  ) {}
+  constructor() {}
   
-   async create(createImageDto: CreateImageDto) {
-    const newFile = this.imageRepo.create(createImageDto);
-    await this.imageRepo.save(newFile);
-    return newFile;
+   async create(createImageDto: CreateImageDto): Promise<Image> {
+    const newFile = ImageRepository.create(createImageDto);
+    return await ImageRepository.save(newFile);
   }
 
   async findAll(): Promise<Image[]> {
-    return this.imageRepo.find();
+    return await ImageRepository.find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} image`;
+  async findByImagePath(path: string): Promise<Image> {
+    return await ImageRepository.findOneBy({imagePath: path});
   }
 
-  update(id: number, updateImageDto: UpdateImageDto) {
-    return `This action updates a #${id} image`;
+  async findOne(id: number): Promise<Image[]> {
+    return await ImageRepository.find({where: {id: id}});
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} image`;
+  async findImageByType(type: string): Promise<Image[]> {
+    return await ImageRepository.find({where: {imageType: type}});
+  }
+
+  async update(id: number, updateImageDto: UpdateImageDto): Promise<Image> {
+    const image = await ImageRepository.preload({
+      id: id,
+      ...updateImageDto,
+    });
+    if (!image) {
+      throw new NotFoundException(`Item ${id} not found`);
+    }
+    return ImageRepository.save(image);
+  }
+
+  async remove(id: number) {
+    const image = await this.findOne(id);
+    return ImageRepository.remove(image);
   }
 }

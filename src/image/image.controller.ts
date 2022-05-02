@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseInterceptors, UploadedFile, UploadedFiles, Res, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseInterceptors, UploadedFile, UploadedFiles, Res, UseGuards, ConflictException } from '@nestjs/common';
 import { ImageService } from './image.service';
 import { CreateImageDto } from './dto/create-image.dto';
 import { UpdateImageDto } from './dto/update-image.dto';
@@ -6,16 +6,12 @@ import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { editFileName, imageFileFilter } from 'src/middleware/file-upload.utils';
 import JwtAuthGaurd from 'src/guards/jwtAuth.gaurd';
+import { Image } from './entities/image.entity';
 
 @Controller('image')
 export class ImageController {
   private path = '/files/';
   constructor(private readonly imageService: ImageService) {}
-
-  @Post()
-  create(@Body() createImageDto: CreateImageDto) {
-    return this.imageService.create(createImageDto);
-  }
 
   /**
    * Uploads a single file
@@ -23,7 +19,7 @@ export class ImageController {
    * @returns Uploaded file
    */
   @Post('upload')
-  @UseGuards(JwtAuthGaurd)
+  //@UseGuards(JwtAuthGaurd)
   @UseInterceptors(
     FileInterceptor('imagePath', {
       storage: diskStorage({
@@ -33,11 +29,23 @@ export class ImageController {
       fileFilter: imageFileFilter,
     }),
   )
-  async uploadedFile(@UploadedFile() file: Express.Multer.File) {
-    const response = {
-      filename: this.path + file.filename,
-    };
-    return response;
+  async uploadedFile(@UploadedFile() file: Express.Multer.File, @Body() createImageDto: CreateImageDto): Promise<Image> {
+
+    let body: CreateImageDto = {
+      imagePath: this.path + file.filename,
+      description: createImageDto.description,
+      imageType: createImageDto.imageType,
+      completed: createImageDto.completed
+    }
+
+    const existing = await this.imageService.findAll();
+    existing.forEach(image => {
+      if (image.imagePath == body.imagePath) {
+        throw new ConflictException(`Image ${image.imagePath} already exists.`);
+      }
+      return
+    });
+    return this.imageService.create(body);
   }
 
   /**
@@ -57,9 +65,8 @@ export class ImageController {
   )
   async uploadMultipleFiles(@UploadedFiles() files): Promise<any[]> {
     const response = [];
-    files.forEach((file: { originalname: any; filename: any; }) => {
+    files.forEach((file: { filename: any; }) => {
       const fileReponse = {
-        originalname: file.originalname,
         filename: file.filename,
       };
       response.push(fileReponse);
@@ -74,7 +81,7 @@ export class ImageController {
    * @returns 
    */
   @Get(':imgpath')
-  seeUploadedFile(@Param('imgpath') image, @Res() res) {
+  seeUploadedFile(@Param('imgpath') image: string, @Res() res) {
     return res.sendFile(image, { root: './files' });
 }
 
@@ -84,8 +91,13 @@ export class ImageController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.imageService.findOne(+id);
+  findOne(@Param('id') id: number) {
+    return this.imageService.findOne(id);
+  }
+
+  @Get('imageType')
+  findByImageType(@Param('imageType') type: string) {
+    return this.imageService.findImageByType(type);
   }
 
   @Patch(':id')
@@ -94,7 +106,7 @@ export class ImageController {
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.imageService.remove(+id);
+  remove(@Param('id') id: number) {
+    return this.imageService.remove(id);
   }
 }

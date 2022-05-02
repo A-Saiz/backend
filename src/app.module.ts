@@ -15,12 +15,12 @@ import { ExceptionsLoggerFilter } from './utils/exceptionsLogger.filter';
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
-      validationSchema: Joi.object().keys({
-        JWT_SECRET: Joi.string().required(),
-        JWT_EXPIRATION_TIME: Joi.string().required(),
-        JWT_REFRESH_SECRET: Joi.string().required(),
-        JWT_REFRESH_EXPIRATION_TIME: Joi.string().required()
-      })
+      //validationSchema: Joi.object().keys({
+       // JWT_SECRET: Joi.string().required(),
+       // JWT_EXPIRATION_TIME: Joi.string().required(),
+       // JWT_REFRESH_SECRET: Joi.string().required(),
+       // JWT_REFRESH_EXPIRATION_TIME: Joi.string().required()
+     // })
     }),
     MulterModule.register({
       dest: './files'
